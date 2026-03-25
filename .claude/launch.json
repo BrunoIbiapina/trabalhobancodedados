@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Jupyter Notebook",
+      "runtimeExecutable": "jupyter",
+      "runtimeArgs": ["notebook", "--no-browser", "--port=8888", "--notebook-dir=/Users/brunoibiapina/Downloads/TrabalhoBD"],
+      "port": 8888
+    },
+    {
+      "name": "JupyterLab",
+      "runtimeExecutable": "jupyter",
+      "runtimeArgs": ["lab", "--no-browser", "--port=8889", "--notebook-dir=/Users/brunoibiapina/Downloads/TrabalhoBD"],
+      "port": 8889
+    },
+    {
+      "name": "DataChat",
+      "runtimeExecutable": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python",
+      "runtimeArgs": ["-m", "streamlit", "run", "/Users/brunoibiapina/Downloads/TrabalhoBD/app_streamlit.py", "--server.headless=true"],
+      "port": 8501,
+      "autoPort": true
+    }
+  ]
+}
