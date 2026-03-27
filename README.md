@@ -24,28 +24,67 @@ Sistema completo de análise de dados com IA, que permite conversar sobre datase
 
 ## Como Executar
 
-### App Streamlit
+### 1. Instalar dependências (rode uma vez)
+
 ```bash
-pip install anthropic streamlit plotly pandas numpy
+pip install anthropic streamlit flask twilio pandas numpy plotly kaleido requests scikit-learn matplotlib seaborn jupyter networkx --break-system-packages
+```
+
+### 2. Configurar a chave da API
+
+Crie um arquivo `.env` na raiz do projeto ou exporte a variável no terminal:
+
+```bash
+export ANTHROPIC_API_KEY="sua-chave-aqui"
+```
+
+---
+
+### App Web (Streamlit)
+
+```bash
 streamlit run frontend/app_streamlit.py
 ```
 
-### Bot WhatsApp (Twilio)
-```bash
-pip install anthropic flask twilio pandas numpy plotly kaleido requests
+Abre automaticamente em `http://localhost:8501`
 
-# Terminal 1:
+---
+
+### Bot WhatsApp via Twilio
+
+Requer 2 terminais abertos ao mesmo tempo:
+
+```bash
+# Terminal 1 — inicia o servidor Flask na porta 5001:
 python3 backend/whatsapp_twilio.py
 
-# Terminal 2:
-ngrok http 5000
-
-# Configure a URL do ngrok no Twilio Console > Sandbox Settings
+# Terminal 2 — expõe o servidor para a internet:
+ngrok http 5001
 ```
 
-### Notebook Decision Tree
+Depois copie a URL gerada pelo ngrok (ex: `https://xxxx.ngrok-free.app`) e cole no **Twilio Console > Sandbox Settings > Webhook URL**, adicionando `/webhook` no final.
+
+---
+
+### Bot WhatsApp via Meta API
+
 ```bash
-pip install scikit-learn matplotlib seaborn plotly pandas numpy
+python3 backend/whatsapp_bot.py
+```
+
+---
+
+### Bot conversacional no terminal
+
+```bash
+python3 backend/csv_bot_claude.py
+```
+
+---
+
+### Notebook Machine Learning (Decision Tree)
+
+```bash
 jupyter notebook decision_tree_completo.ipynb
 ```
 

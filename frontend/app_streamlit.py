@@ -22,79 +22,314 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ── Matrix Rain ───────────────────────────────────────────────────────────────
+import streamlit.components.v1 as _c
+_c.html("""
+<script>
+(function(){
+  var canvas = window.parent.document.getElementById('matrix-rain');
+  if(canvas) return;
+  canvas = window.parent.document.createElement('canvas');
+  canvas.id = 'matrix-rain';
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0.13;';
+  window.parent.document.body.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+  canvas.width = window.parent.innerWidth;
+  canvas.height = window.parent.innerHeight;
+  var cols = Math.floor(canvas.width / 18);
+  var drops = Array(cols).fill(1);
+  var chars = 'アイウエオカキクケコ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&<>/\\|=+-*';
+  function draw(){
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#00ff41';
+    ctx.font = '14px JetBrains Mono, monospace';
+    for(var i=0;i<drops.length;i++){
+      var c = chars[Math.floor(Math.random()*chars.length)];
+      ctx.fillText(c, i*18, drops[i]*18);
+      if(drops[i]*18 > canvas.height && Math.random() > 0.975) drops[i]=0;
+      drops[i]++;
+    }
+  }
+  setInterval(draw, 50);
+  window.parent.addEventListener('resize', function(){
+    canvas.width = window.parent.innerWidth;
+    canvas.height = window.parent.innerHeight;
+    cols = Math.floor(canvas.width/18);
+    drops = Array(cols).fill(1);
+  });
+})();
+</script>
+""", height=0)
+
 # ── Design ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
 
-html, body, [class*="css"] { font-family: 'Inter', -apple-system, sans-serif; }
-.stApp { background-color: #f9f7f4; }
+* { -webkit-font-smoothing: antialiased; }
+html, body, [class*="css"] { font-family: 'JetBrains Mono', 'Courier New', monospace !important; }
+.stApp { background-color: #000000; }
 #MainMenu, footer, header { visibility: hidden; }
 
-/* ── Sidebar ── */
-[data-testid="stSidebar"] { background-color: #f0ece4 !important; border-right: 1px solid #e0d9cf !important; }
-[data-testid="stSidebar"] > div { padding: 1.5rem 1.2rem !important; }
-.sidebar-logo { display:flex; align-items:center; gap:10px; margin-bottom:1.5rem; }
-.sidebar-logo-icon { width:32px; height:32px; background:#c96442; border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; font-weight:700; }
-.sidebar-title { font-size:1.05rem; font-weight:600; color:#1a1a1a; }
-.sidebar-sub { font-size:0.72rem; color:#8a7f72; }
-.sidebar-section { font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:#8a7f72; margin:1.2rem 0 0.5rem 0; }
-.dataset-badge { background:#fff; border:1px solid #e0d9cf; border-radius:10px; padding:10px 12px; font-size:0.82rem; color:#3d3730; margin-bottom:0.8rem; }
-.dataset-badge strong { color:#1a1a1a; }
-[data-testid="stSidebar"] .stButton > button {
-    background:transparent !important; border:none !important; border-radius:6px !important;
-    color:#4a4540 !important; font-size:0.82rem !important; font-weight:400 !important;
-    padding:5px 10px !important; text-align:left !important; width:100% !important;
+/* Botão de expandir/colapsar sidebar — sempre visível */
+[data-testid="stSidebarCollapsedControl"] button,
+button[data-testid="baseButton-headerNoPadding"],
+[data-testid="collapsedControl"] {
+    background: rgba(0,255,65,0.12) !important;
+    border: 1px solid #00ff4150 !important;
+    border-radius: 3px !important;
+    color: #00ff41 !important;
 }
-[data-testid="stSidebar"] .stButton > button:hover { background:#e4ddd5 !important; color:#1a1a1a !important; }
-.status-pill { display:inline-flex; align-items:center; gap:6px; background:#f0faf0; border:1px solid #b8e0b8; border-radius:20px; padding:3px 10px; font-size:0.75rem; color:#2d6e2d; font-weight:500; }
-.status-dot { width:7px; height:7px; background:#3cb043; border-radius:50%; animation:pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+section[data-testid="stSidebarCollapsedControl"] {
+    background: #050505 !important;
+}
 
-/* ── Chat header ── */
-.chat-header { text-align:center; padding:15vh 0 2rem 0; }
-.chat-header-icon { width:48px; height:48px; background:#c96442; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:white; margin:0 auto 1rem auto; }
-.chat-header h1 { font-size:1.5rem !important; font-weight:600 !important; color:#1a1a1a !important; margin:0 !important; }
-.chat-header p { color:#8a7f72; font-size:0.88rem; margin:0.3rem 0 0 0; }
+/* ════════════════════════════════════════
+   SIDEBAR — Terminal / Hacker
+════════════════════════════════════════ */
+[data-testid="stSidebar"] {
+    background-color: #050505 !important;
+    border-right: 1px solid #00ff4125 !important;
+}
+[data-testid="stSidebar"] > div { padding: 2rem 1.4rem !important; }
 
-/* ── Mensagens ── */
-[data-testid="stChatMessageContent"] { background:transparent !important; }
-.stChatMessage p, .stChatMessage li { font-size:0.92rem !important; line-height:1.65 !important; color:#1a1a1a !important; }
+.sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 1.8rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid #00ff4118;
+}
+.sidebar-logo-icon {
+    font-size: 1.1rem; color: #00ff41; font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+}
+.sidebar-title {
+    font-size: 0.88rem; font-weight: 700;
+    color: #00ff41; letter-spacing: 0.04em;
+    font-family: 'JetBrains Mono', monospace;
+}
+.sidebar-sub { font-size: 0.62rem; color: #005c1e; margin-top: 2px; }
 
-/* ── Input fixo embaixo ── */
-[data-testid="stBottom"] > div { background: linear-gradient(to top, #f9f7f4 65%, transparent) !important; padding-bottom:20px !important; }
-[data-testid="stChatInput"] { border:1px solid #d6cfc5 !important; border-radius:16px !important; box-shadow:0 2px 12px rgba(0,0,0,0.06) !important; background:white !important; }
-[data-testid="stChatInput"] textarea { font-size:0.92rem !important; color:#1a1a1a !important; }
-[data-testid="stChatInput"] textarea::placeholder { color:#b8b0a6 !important; }
-[data-testid="stChatInput"] button { background:#c96442 !important; border-radius:10px !important; }
+.sidebar-section {
+    font-size: 0.58rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: #005c1e; margin: 1.5rem 0 0.5rem 0;
+}
+.sidebar-section::before { content: "// "; color: #003d14; }
 
-/* ── Cards de opções iniciais ── */
+.dataset-badge {
+    background: rgba(0,255,65,0.04);
+    border: 1px solid #00ff4122;
+    border-radius: 3px; padding: 9px 11px;
+    font-size: 0.74rem; color: #00cc33;
+    margin-bottom: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+[data-testid="stSidebar"] .stButton > button {
+    background: transparent !important; border: none !important;
+    border-radius: 2px !important; color: #00aa28 !important;
+    font-size: 0.76rem !important; font-weight: 400 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    padding: 5px 8px !important; text-align: left !important;
+    width: 100% !important; transition: all 0.1s !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: rgba(0,255,65,0.07) !important; color: #00ff41 !important;
+}
+/* Botões de controle — voltar / nova conversa */
+[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
+    background: rgba(0,255,65,0.08) !important;
+    border: 1px solid #00ff4140 !important;
+    color: #00ff41 !important;
+    margin-bottom: 4px !important;
+    padding: 8px 10px !important;
+}
+
+.status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(0,255,65,0.06); border: 1px solid #00ff4122;
+    border-radius: 2px; padding: 3px 9px;
+    font-size: 0.62rem; color: #00ff41; font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+}
+.status-dot {
+    width: 5px; height: 5px; background: #00ff41;
+    border-radius: 50%; animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+/* File uploader minimalista */
+[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+    border: none !important; background: transparent !important; padding: 0 !important;
+}
+[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
+    background: transparent !important; border: none !important;
+    padding: 0 !important; min-height: unset !important;
+}
+[data-testid="stSidebar"] [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
+    background: rgba(0,255,65,0.06) !important;
+    border: 1px solid #00ff4125 !important; border-radius: 3px !important;
+    color: #00cc33 !important; font-size: 0.74rem !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    width: 100% !important; padding: 7px 12px !important;
+}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button:hover {
+    background: rgba(0,255,65,0.12) !important; color: #00ff41 !important;
+}
+
+/* Botões de controle no rodapé da sidebar */
+[data-testid="stSidebar"] [data-testid="column"] .stButton > button,
+[data-testid="stSidebar"] [data-testid="stColumns"] .stButton > button {
+    background: rgba(0,255,65,0.06) !important;
+    border: 1px solid #00ff4130 !important;
+    border-radius: 3px !important;
+    color: #00cc33 !important;
+    font-size: 0.7rem !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    padding: 6px 6px !important;
+    text-align: center !important;
+    transition: all 0.12s !important;
+    width: 100% !important;
+}
+[data-testid="stSidebar"] [data-testid="column"] .stButton > button::before,
+[data-testid="stSidebar"] [data-testid="stColumns"] .stButton > button::before {
+    content: "" !important;
+}
+[data-testid="stSidebar"] [data-testid="column"] .stButton > button:hover,
+[data-testid="stSidebar"] [data-testid="stColumns"] .stButton > button:hover {
+    background: rgba(0,255,65,0.14) !important;
+    border-color: #00ff41 !important;
+    color: #00ff41 !important;
+}
+
+/* Botão voltar fixo */
+button[kind="primary"] {
+    background: rgba(0,255,65,0.1) !important;
+    border: 1px solid #00ff41 !important;
+    border-radius: 3px !important;
+    color: #00ff41 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.74rem !important;
+    padding: 5px 12px !important;
+    transition: all 0.12s !important;
+    box-shadow: 0 0 12px rgba(0,255,65,0.2) !important;
+}
+button[kind="primary"]:hover {
+    background: rgba(0,255,65,0.2) !important;
+    box-shadow: 0 0 20px rgba(0,255,65,0.35) !important;
+}
+
+/* ════════════════════════════════════════
+   ÁREA PRINCIPAL — Terminal
+════════════════════════════════════════ */
+.chat-header { text-align: center; padding: 8vh 0 2.5rem 0; }
+
+.chat-header-cmd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem; color: #005c1e;
+    margin-bottom: 1rem; letter-spacing: 0.02em;
+}
+.chat-header-cmd span { color: #00ff41; }
+
+.chat-header h1 {
+    font-size: 2.8rem !important; font-weight: 800 !important;
+    color: #ffffff !important; margin: 0 !important;
+    letter-spacing: -0.02em !important; line-height: 1.05 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    text-shadow: 0 0 40px rgba(0,255,65,0.15) !important;
+}
+.chat-header h1 span { color: #00ff41; }
+.chat-header p {
+    color: #3a7a4a; font-size: 0.82rem; margin: 0.8rem 0 0 0;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.02em;
+}
+
+/* Cursor piscando */
+.cursor::after {
+    content: "_"; color: #00ff41;
+    animation: blink 1s step-end infinite;
+}
+
+/* Mensagens */
+[data-testid="stChatMessageContent"] { background: transparent !important; }
+.stChatMessage p, .stChatMessage li {
+    font-size: 0.86rem !important; line-height: 1.8 !important;
+    color: #cccccc !important;
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Input */
+[data-testid="stBottom"] > div {
+    background: linear-gradient(to top, #000000 75%, transparent) !important;
+    padding-bottom: 24px !important;
+}
+[data-testid="stChatInput"] {
+    border: 1px solid #00ff4130 !important; border-radius: 3px !important;
+    box-shadow: 0 0 25px rgba(0,255,65,0.06) !important;
+    background: #050505 !important;
+}
+[data-testid="stChatInput"] textarea {
+    font-size: 0.86rem !important; color: #00ff41 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+}
+[data-testid="stChatInput"] textarea::placeholder { color: #1a4d28 !important; }
+[data-testid="stChatInput"] button {
+    background: #00ff41 !important; border-radius: 2px !important;
+}
+
+/* Cards */
 .stMainBlockContainer .stColumns [data-testid="stVerticalBlock"] > .stButton > button {
-    background: white !important;
-    border: 1px solid #e0d9cf !important;
-    border-radius: 12px !important;
+    background: rgba(0,255,65,0.03) !important;
+    border: 1px solid #00ff4125 !important;
+    border-radius: 3px !important;
     padding: 16px 14px !important;
     text-align: left !important;
-    color: #3d3730 !important;
-    font-size: 0.82rem !important;
-    min-height: 85px !important;
-    transition: all 0.2s ease !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
+    color: #3a7a4a !important;
+    font-size: 0.76rem !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    min-height: 88px !important;
+    transition: all 0.12s !important;
+    line-height: 1.6 !important;
 }
 .stMainBlockContainer .stColumns [data-testid="stVerticalBlock"] > .stButton > button:hover {
-    border-color: #c96442 !important;
-    box-shadow: 0 3px 12px rgba(201,100,66,0.12) !important;
-    transform: translateY(-1px) !important;
+    background: rgba(0,255,65,0.08) !important;
+    border-color: #00ff41 !important;
+    color: #00ff41 !important;
+    box-shadow: 0 0 18px rgba(0,255,65,0.12) !important;
 }
 
-/* ── Outros ── */
-[data-testid="stFileUploader"] { border:1.5px dashed #d6cfc5 !important; border-radius:12px !important; background:white !important; }
-hr { border-color:#e0d9cf !important; }
-.thinking { display:flex; align-items:center; gap:8px; color:#8a7f72; font-size:0.83rem; padding:8px 0; }
-.thinking-dots span { display:inline-block; width:6px; height:6px; background:#c96442; border-radius:50%; animation:bounce 1.2s infinite; margin:0 2px; }
-.thinking-dots span:nth-child(2) { animation-delay:0.2s; }
-.thinking-dots span:nth-child(3) { animation-delay:0.4s; }
-@keyframes bounce { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-6px);} }
+/* File uploader principal */
+[data-testid="stFileUploader"] {
+    border: 1px dashed #00ff4125 !important;
+    border-radius: 3px !important; background: rgba(0,255,65,0.02) !important;
+}
+
+hr { border-color: #00ff4115 !important; }
+
+/* Thinking */
+.thinking {
+    display: flex; align-items: center; gap: 8px;
+    color: #1a4d28; font-size: 0.76rem; padding: 8px 0;
+    font-family: 'JetBrains Mono', monospace;
+}
+.thinking-dots span {
+    display: inline-block; width: 5px; height: 5px;
+    background: #00ff41; border-radius: 50%;
+    animation: bounce 1.2s infinite; margin: 0 2px;
+}
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-5px);} }
+
+/* Expander */
+[data-testid="stExpander"] {
+    border: 1px solid #00ff4118 !important;
+    background: rgba(0,255,65,0.02) !important;
+    border-radius: 3px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1087,16 +1322,33 @@ with st.sidebar:
     # Logo
     st.markdown("""
     <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">D</div>
+        <div class="sidebar-logo-icon">&gt;_</div>
         <div>
             <div class="sidebar-title">DataChat</div>
-            <div class="sidebar-sub">Análise conversacional</div>
+            <div class="sidebar-sub">v1.0.0 // powered by Claude</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     # Status
-    st.markdown('<div class="status-pill"><div class="status-dot"></div> Online</div>', unsafe_allow_html=True)
+    st.markdown('<div class="status-pill"><div class="status-dot"></div> system online</div>', unsafe_allow_html=True)
+
+    # Controles rápidos — sempre visíveis no topo
+    st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
+    col_v, col_n = st.columns(2)
+    with col_v:
+        if st.button("> menu", use_container_width=True, key="btn_menu"):
+            st.session_state.messages = []
+            st.session_state.history = []
+            st.session_state.df = None
+            st.rerun()
+    with col_n:
+        if st.button("> nova", use_container_width=True, key="btn_nova"):
+            st.session_state.messages = []
+            st.session_state.history = []
+            st.session_state.df = None
+            st.rerun()
+    st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
 
     # Dataset
     st.markdown('<div class="sidebar-section">Dataset</div>', unsafe_allow_html=True)
@@ -1183,23 +1435,28 @@ with st.sidebar:
 
     n_msgs = len([m for m in st.session_state.messages if m["role"]=="user"])
     st.markdown(f"""
-    <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #e0d9cf;border-radius:10px;padding:8px 12px;margin-top:4px;">
-        <span style="font-size:0.75rem;color:#8a7f72;">{n_msgs} mensagens</span>
+    <div style="background:rgba(0,255,65,0.03);border:1px solid #00ff4118;border-radius:2px;padding:7px 11px;margin-bottom:8px;">
+        <span style="font-size:0.65rem;color:#1a4d28;font-family:'JetBrains Mono',monospace;">// {n_msgs} cmds executados</span>
     </div>
+    <style>
+    div[data-testid="stSidebar"] div[data-testid="stButton"]:has(button[kind="secondary"]) button {{
+        background: rgba(0,255,65,0.08) !important;
+        border: 1px solid #00ff4145 !important;
+        border-radius: 3px !important;
+        color: #00cc33 !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.74rem !important;
+        padding: 7px 10px !important;
+        margin-bottom: 4px !important;
+        width: 100% !important;
+    }}
+    #btn_menu, #btn_nova {{
+        color: #00ff41 !important;
+    }}
+    </style>
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("↩ Menu inicial", use_container_width=True, key="btn_menu"):
-            st.session_state.messages = []
-            st.session_state.history = []
-            st.rerun()
-    with col2:
-        if st.button("+ Nova conversa", use_container_width=True, key="btn_nova"):
-            st.session_state.messages = []
-            st.session_state.history = []
-            st.session_state.df = None
-            st.rerun()
+    # (controles movidos para o topo da sidebar)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1218,20 +1475,20 @@ with main:
 
             st.markdown("""
             <div class="chat-header">
-                <div class="chat-header-icon">D</div>
-                <h1>Dataset carregado!</h1>
-                <p>Escolha uma opção ou escreva o que deseja</p>
+                <div class="chat-header-cmd">&gt; ./execute <span>datachat.sh</span> --mode=análise</div>
+                <h1>O que você quer<br><span>descobrir</span>?<span class="cursor"></span></h1>
+                <p>// dataset carregado. escolha uma análise ou faça sua pergunta.</p>
             </div>
             """, unsafe_allow_html=True)
 
             # Opções rápidas como cards clicáveis
             opcoes = [
-                ("1", "Resumo geral", "Visão completa do dataset com estatísticas", "Resumo do dataset"),
-                ("2", "Rede de correlações", "Grafo interativo com nós conectados", "Mapa de correlações em rede"),
-                ("3", "Fluxo de análise", "Mapa visual do raciocínio sobre os dados", "Fluxo de análise dos dados"),
-                ("4", f"Árvore de {sug1}", "Categorias em árvore radial com nós", f"Árvore de categorias de {sug1}"),
-                ("5", "Gráfico 3D", "Visualização tridimensional interativa", "Gráfico 3D das variáveis numéricas"),
-                ("6", "Detectar anomalias", "Encontrar valores fora do padrão", f"Detectar anomalias em {num_cols[0]}" if num_cols else "Detectar anomalias"),
+                ("01", "[scan] Resumo geral", "// estatísticas completas do dataset", "Resumo do dataset"),
+                ("02", "[graph] Rede de correlações", "// grafo interativo entre variáveis", "Mapa de correlações em rede"),
+                ("03", "[map] Fluxo de análise", "// mapa visual do raciocínio dos dados", "Fluxo de análise dos dados"),
+                ("04", f"[tree] Árvore de {sug1}", "// hierarquia radial de categorias", f"Árvore de categorias de {sug1}"),
+                ("05", "[viz] Gráfico 3D", "// visualização tridimensional interativa", "Gráfico 3D das variáveis numéricas"),
+                ("06", "[alert] Detectar anomalias", "// outliers e valores fora do padrão", f"Detectar anomalias em {num_cols[0]}" if num_cols else "Detectar anomalias"),
             ]
 
             cols = st.columns(3)
@@ -1245,17 +1502,71 @@ with main:
                         st.session_state._trigger = trigger_text
                         st.rerun()
 
-            st.markdown("<div style='text-align:center;color:#8a7f72;font-size:0.85rem;margin-top:1rem'>Ou digite sua pergunta abaixo</div>", unsafe_allow_html=True)
+            st.markdown("<div style='text-align:center;color:#1a4d28;font-size:0.72rem;margin-top:1.2rem;font-family:JetBrains Mono,monospace'>// ou digite sua consulta abaixo_</div>", unsafe_allow_html=True)
 
         else:
             st.markdown("""
             <div class="chat-header">
-                <div class="chat-header-icon">D</div>
-                <h1>O que quer analisar?</h1>
-                <p>Carregue um arquivo CSV na barra lateral<br>ou use <b>Usar exemplo de dados</b> para explorar</p>
+                <div class="chat-header-cmd">&gt; ./execute <span>datachat.sh</span></div>
+                <h1>Análise de dados.<br><span>Do jeito certo.</span><span class="cursor"></span></h1>
+                <p>// carregue um CSV abaixo ou use o dataset de exemplo para iniciar.</p>
             </div>
             """, unsafe_allow_html=True)
 
+            # Upload direto na área principal
+            st.markdown('<div style="margin-top:0.5rem;margin-bottom:0.3rem;color:#00ff41;font-size:0.78rem;font-family:JetBrains Mono,monospace">// carregar arquivo CSV</div>', unsafe_allow_html=True)
+            uploaded_main = st.file_uploader(
+                "Carregar CSV",
+                type=["csv"],
+                label_visibility="collapsed",
+                key="upload_main"
+            )
+            if uploaded_main:
+                try:
+                    df_new = pd.read_csv(uploaded_main)
+                    st.session_state.df = df_new
+                    st.session_state.history = []
+                    st.session_state.messages = []
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erro ao ler CSV: {e}")
+
+            st.markdown('<div style="margin-top:1rem;margin-bottom:0.5rem;color:#1a4d28;font-size:0.72rem;font-family:JetBrains Mono,monospace">// ou use dados de exemplo</div>', unsafe_allow_html=True)
+            if st.button("▶  Usar dataset de exemplo", use_container_width=False, key="exemplo_main"):
+                np.random.seed(42); n = 300
+                cats = np.random.choice(["Bronze","Prata","Ouro","Platina"],n,p=[0.4,0.3,0.2,0.1])
+                renda = np.where(cats=="Platina",np.random.normal(16000,3500,n).clip(10000,35000),
+                        np.where(cats=="Ouro",np.random.normal(9000,2000,n).clip(5500,16000),
+                        np.where(cats=="Prata",np.random.normal(4800,1000,n).clip(3000,8000),
+                        np.random.normal(2500,700,n).clip(1200,5000)))).round(2)
+                st.session_state.df = pd.DataFrame({
+                    "cliente_id":range(1001,1001+n),"nome":[f"Cliente {i:03d}" for i in range(1,n+1)],
+                    "idade":np.random.randint(18,72,n),"genero":np.random.choice(["M","F","Outro"],n,p=[0.48,0.48,0.04]),
+                    "cidade":np.random.choice(["São Paulo","Rio de Janeiro","Belo Horizonte","Curitiba","Porto Alegre","Fortaleza"],n),
+                    "categoria":cats,"renda_mensal":renda,
+                    "total_compras":np.random.randint(1,80,n),"ticket_medio":np.random.normal(280,120,n).clip(40,1200).round(2),
+                    "satisfacao":np.clip(np.where(cats=="Platina",8,np.where(cats=="Ouro",7,np.where(cats=="Prata",6,5)))+np.random.randint(-2,3,n),1,10),
+                    "churn_risco":np.random.choice(["Baixo","Médio","Alto"],n,p=[0.55,0.28,0.17]),
+                    "data_cadastro":pd.date_range("2020-01-01",periods=n,freq="3D").strftime("%Y-%m-%d"),
+                    "ativo":np.random.choice([True,False],n,p=[0.85,0.15]),
+                })
+                st.session_state.history = []; st.session_state.messages = []
+                st.rerun()
+
+
+    # Botão voltar — sempre visível, fixo no topo
+    st.markdown("""
+    <style>
+    div[data-testid="stVerticalBlock"] > div:has(> div[data-testid="stButton"] > button[kind="primary"]) {
+        position: fixed; top: 14px; left: 14px; z-index: 9999;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    if st.button("◀ voltar", key="btn_voltar_main", type="primary"):
+        st.session_state.messages = []
+        st.session_state.history = []
+        st.session_state.df = None
+        st.rerun()
 
     # Histórico de mensagens
     for mi, msg in enumerate(st.session_state.messages):

@@ -25,73 +25,124 @@ st.set_page_config(
 # ── Design ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 html, body, [class*="css"] { font-family: 'Inter', -apple-system, sans-serif; }
-.stApp { background-color: #f9f7f4; }
+.stApp { background-color: #F8FAFC; }
 #MainMenu, footer, header { visibility: hidden; }
 
-/* ── Sidebar ── */
-[data-testid="stSidebar"] { background-color: #f0ece4 !important; border-right: 1px solid #e0d9cf !important; }
+/* ── Sidebar escura ── */
+[data-testid="stSidebar"] { background-color: #0F172A !important; border-right: none !important; }
 [data-testid="stSidebar"] > div { padding: 1.5rem 1.2rem !important; }
-.sidebar-logo { display:flex; align-items:center; gap:10px; margin-bottom:1.5rem; }
-.sidebar-logo-icon { width:32px; height:32px; background:#c96442; border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; font-weight:700; }
-.sidebar-title { font-size:1.05rem; font-weight:600; color:#1a1a1a; }
-.sidebar-sub { font-size:0.72rem; color:#8a7f72; }
-.sidebar-section { font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:#8a7f72; margin:1.2rem 0 0.5rem 0; }
-.dataset-badge { background:#fff; border:1px solid #e0d9cf; border-radius:10px; padding:10px 12px; font-size:0.82rem; color:#3d3730; margin-bottom:0.8rem; }
-.dataset-badge strong { color:#1a1a1a; }
+
+.sidebar-logo { display:flex; align-items:center; gap:10px; margin-bottom:1.8rem; }
+.sidebar-logo-icon {
+    width:34px; height:34px;
+    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+    border-radius:9px; display:flex; align-items:center; justify-content:center;
+    color:white; font-size:15px; font-weight:700;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+}
+.sidebar-title { font-size:1rem; font-weight:600; color:#F1F5F9; }
+.sidebar-sub { font-size:0.7rem; color:#475569; }
+.sidebar-section {
+    font-size:0.65rem; font-weight:600; text-transform:uppercase;
+    letter-spacing:0.1em; color:#334155;
+    margin:1.4rem 0 0.5rem 0;
+}
+.dataset-badge {
+    background:#1E293B; border:1px solid #334155;
+    border-radius:8px; padding:10px 12px;
+    font-size:0.82rem; color:#94A3B8; margin-bottom:0.8rem;
+}
+.dataset-badge strong { color:#E2E8F0; }
+
 [data-testid="stSidebar"] .stButton > button {
-    background:transparent !important; border:none !important; border-radius:6px !important;
-    color:#4a4540 !important; font-size:0.82rem !important; font-weight:400 !important;
+    background:transparent !important; border:none !important;
+    border-radius:6px !important; color:#64748B !important;
+    font-size:0.82rem !important; font-weight:400 !important;
     padding:5px 10px !important; text-align:left !important; width:100% !important;
 }
-[data-testid="stSidebar"] .stButton > button:hover { background:#e4ddd5 !important; color:#1a1a1a !important; }
-.status-pill { display:inline-flex; align-items:center; gap:6px; background:#f0faf0; border:1px solid #b8e0b8; border-radius:20px; padding:3px 10px; font-size:0.75rem; color:#2d6e2d; font-weight:500; }
-.status-dot { width:7px; height:7px; background:#3cb043; border-radius:50%; animation:pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+[data-testid="stSidebar"] .stButton > button:hover {
+    background:#1E293B !important; color:#CBD5E1 !important;
+}
+
+.status-pill {
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.25);
+    border-radius:20px; padding:3px 10px;
+    font-size:0.72rem; color:#22D3EE; font-weight:500;
+}
+.status-dot { width:6px; height:6px; background:#22D3EE; border-radius:50%; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+    border:1.5px dashed #1E293B !important;
+    border-radius:8px !important; background:#1E293B !important;
+}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] * { color:#64748B !important; }
 
 /* ── Chat header ── */
-.chat-header { text-align:center; padding:15vh 0 2rem 0; }
-.chat-header-icon { width:48px; height:48px; background:#c96442; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:white; margin:0 auto 1rem auto; }
-.chat-header h1 { font-size:1.5rem !important; font-weight:600 !important; color:#1a1a1a !important; margin:0 !important; }
-.chat-header p { color:#8a7f72; font-size:0.88rem; margin:0.3rem 0 0 0; }
+.chat-header { text-align:center; padding:12vh 0 2.5rem 0; }
+.chat-header-icon {
+    width:54px; height:54px;
+    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+    border-radius:16px; display:flex; align-items:center; justify-content:center;
+    font-size:24px; color:white; margin:0 auto 1.2rem auto;
+    box-shadow: 0 8px 28px rgba(99,102,241,0.35);
+}
+.chat-header h1 {
+    font-size:1.65rem !important; font-weight:700 !important;
+    color:#0F172A !important; margin:0 !important; letter-spacing:-0.02em;
+}
+.chat-header p { color:#64748B; font-size:0.9rem; margin:0.4rem 0 0 0; }
 
 /* ── Mensagens ── */
 [data-testid="stChatMessageContent"] { background:transparent !important; }
-.stChatMessage p, .stChatMessage li { font-size:0.92rem !important; line-height:1.65 !important; color:#1a1a1a !important; }
+.stChatMessage p, .stChatMessage li { font-size:0.92rem !important; line-height:1.7 !important; color:#1E293B !important; }
 
-/* ── Input fixo embaixo ── */
-[data-testid="stBottom"] > div { background: linear-gradient(to top, #f9f7f4 65%, transparent) !important; padding-bottom:20px !important; }
-[data-testid="stChatInput"] { border:1px solid #d6cfc5 !important; border-radius:16px !important; box-shadow:0 2px 12px rgba(0,0,0,0.06) !important; background:white !important; }
-[data-testid="stChatInput"] textarea { font-size:0.92rem !important; color:#1a1a1a !important; }
-[data-testid="stChatInput"] textarea::placeholder { color:#b8b0a6 !important; }
-[data-testid="stChatInput"] button { background:#c96442 !important; border-radius:10px !important; }
+/* ── Input ── */
+[data-testid="stBottom"] > div {
+    background: linear-gradient(to top, #F8FAFC 70%, transparent) !important;
+    padding-bottom:20px !important;
+}
+[data-testid="stChatInput"] {
+    border:1.5px solid #E2E8F0 !important; border-radius:14px !important;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06) !important; background:white !important;
+}
+[data-testid="stChatInput"] textarea { font-size:0.92rem !important; color:#1E293B !important; }
+[data-testid="stChatInput"] textarea::placeholder { color:#94A3B8 !important; }
+[data-testid="stChatInput"] button {
+    background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
+    border-radius:8px !important;
+}
 
-/* ── Cards de opções iniciais ── */
+/* ── Cards de opções ── */
 .stMainBlockContainer .stColumns [data-testid="stVerticalBlock"] > .stButton > button {
     background: white !important;
-    border: 1px solid #e0d9cf !important;
-    border-radius: 12px !important;
-    padding: 16px 14px !important;
+    border: 1.5px solid #E2E8F0 !important;
+    border-radius: 14px !important;
+    padding: 18px 16px !important;
     text-align: left !important;
-    color: #3d3730 !important;
-    font-size: 0.82rem !important;
-    min-height: 85px !important;
-    transition: all 0.2s ease !important;
+    color: #334155 !important;
+    font-size: 0.83rem !important;
+    min-height: 90px !important;
+    transition: all 0.18s ease !important;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
+    line-height: 1.5 !important;
 }
 .stMainBlockContainer .stColumns [data-testid="stVerticalBlock"] > .stButton > button:hover {
-    border-color: #c96442 !important;
-    box-shadow: 0 3px 12px rgba(201,100,66,0.12) !important;
-    transform: translateY(-1px) !important;
+    border-color: #6366F1 !important;
+    box-shadow: 0 6px 20px rgba(99,102,241,0.14) !important;
+    transform: translateY(-2px) !important;
+    color: #1E293B !important;
 }
 
 /* ── Outros ── */
-[data-testid="stFileUploader"] { border:1.5px dashed #d6cfc5 !important; border-radius:12px !important; background:white !important; }
-hr { border-color:#e0d9cf !important; }
-.thinking { display:flex; align-items:center; gap:8px; color:#8a7f72; font-size:0.83rem; padding:8px 0; }
-.thinking-dots span { display:inline-block; width:6px; height:6px; background:#c96442; border-radius:50%; animation:bounce 1.2s infinite; margin:0 2px; }
+[data-testid="stFileUploader"] { border:1.5px dashed #E2E8F0 !important; border-radius:12px !important; background:white !important; }
+hr { border-color:#F1F5F9 !important; }
+.thinking { display:flex; align-items:center; gap:8px; color:#64748B; font-size:0.83rem; padding:8px 0; }
+.thinking-dots span { display:inline-block; width:6px; height:6px; background:#6366F1; border-radius:50%; animation:bounce 1.2s infinite; margin:0 2px; }
 .thinking-dots span:nth-child(2) { animation-delay:0.2s; }
 .thinking-dots span:nth-child(3) { animation-delay:0.4s; }
 @keyframes bounce { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-6px);} }
@@ -1087,16 +1138,16 @@ with st.sidebar:
     # Logo
     st.markdown("""
     <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">D</div>
+        <div class="sidebar-logo-icon">⚡</div>
         <div>
             <div class="sidebar-title">DataChat</div>
-            <div class="sidebar-sub">Análise conversacional</div>
+            <div class="sidebar-sub">Análise com IA</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     # Status
-    st.markdown('<div class="status-pill"><div class="status-dot"></div> Online</div>', unsafe_allow_html=True)
+    st.markdown('<div class="status-pill"><div class="status-dot"></div> Conectado</div>', unsafe_allow_html=True)
 
     # Dataset
     st.markdown('<div class="sidebar-section">Dataset</div>', unsafe_allow_html=True)
@@ -1183,8 +1234,8 @@ with st.sidebar:
 
     n_msgs = len([m for m in st.session_state.messages if m["role"]=="user"])
     st.markdown(f"""
-    <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #e0d9cf;border-radius:10px;padding:8px 12px;margin-top:4px;">
-        <span style="font-size:0.75rem;color:#8a7f72;">{n_msgs} mensagens</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#1E293B;border:1px solid #334155;border-radius:8px;padding:8px 12px;margin-top:4px;">
+        <span style="font-size:0.72rem;color:#475569;">{n_msgs} mensagens nesta sessão</span>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1218,20 +1269,20 @@ with main:
 
             st.markdown("""
             <div class="chat-header">
-                <div class="chat-header-icon">D</div>
-                <h1>Dataset carregado!</h1>
-                <p>Escolha uma opção ou escreva o que deseja</p>
+                <div class="chat-header-icon">⚡</div>
+                <h1>Pronto para analisar</h1>
+                <p>Escolha uma opção abaixo ou faça sua pergunta</p>
             </div>
             """, unsafe_allow_html=True)
 
             # Opções rápidas como cards clicáveis
             opcoes = [
-                ("1", "Resumo geral", "Visão completa do dataset com estatísticas", "Resumo do dataset"),
-                ("2", "Rede de correlações", "Grafo interativo com nós conectados", "Mapa de correlações em rede"),
-                ("3", "Fluxo de análise", "Mapa visual do raciocínio sobre os dados", "Fluxo de análise dos dados"),
-                ("4", f"Árvore de {sug1}", "Categorias em árvore radial com nós", f"Árvore de categorias de {sug1}"),
-                ("5", "Gráfico 3D", "Visualização tridimensional interativa", "Gráfico 3D das variáveis numéricas"),
-                ("6", "Detectar anomalias", "Encontrar valores fora do padrão", f"Detectar anomalias em {num_cols[0]}" if num_cols else "Detectar anomalias"),
+                ("1", "📊  Resumo geral", "Estatísticas completas do dataset", "Resumo do dataset"),
+                ("2", "🕸️  Rede de correlações", "Grafo interativo entre variáveis", "Mapa de correlações em rede"),
+                ("3", "🧠  Fluxo de análise", "Mapa visual do raciocínio dos dados", "Fluxo de análise dos dados"),
+                ("4", f"🌳  Árvore de {sug1}", "Hierarquia radial de categorias", f"Árvore de categorias de {sug1}"),
+                ("5", "🔮  Gráfico 3D", "Visualização tridimensional interativa", "Gráfico 3D das variáveis numéricas"),
+                ("6", "⚠️  Detectar anomalias", "Outliers e valores fora do padrão", f"Detectar anomalias em {num_cols[0]}" if num_cols else "Detectar anomalias"),
             ]
 
             cols = st.columns(3)
@@ -1245,14 +1296,14 @@ with main:
                         st.session_state._trigger = trigger_text
                         st.rerun()
 
-            st.markdown("<div style='text-align:center;color:#8a7f72;font-size:0.85rem;margin-top:1rem'>Ou digite sua pergunta abaixo</div>", unsafe_allow_html=True)
+            st.markdown("<div style='text-align:center;color:#94A3B8;font-size:0.82rem;margin-top:1.2rem;letter-spacing:0.01em'>ou escreva sua pergunta no campo abaixo</div>", unsafe_allow_html=True)
 
         else:
             st.markdown("""
             <div class="chat-header">
-                <div class="chat-header-icon">D</div>
-                <h1>O que quer analisar?</h1>
-                <p>Carregue um arquivo CSV na barra lateral<br>ou use <b>Usar exemplo de dados</b> para explorar</p>
+                <div class="chat-header-icon">⚡</div>
+                <h1>DataChat</h1>
+                <p>Carregue um arquivo CSV na barra lateral<br>ou clique em <b>Usar exemplo de dados</b> para começar</p>
             </div>
             """, unsafe_allow_html=True)
 
