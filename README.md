@@ -1,6 +1,6 @@
 # DataChat — Plataforma de Análise Conversacional de Dados
 
-Sistema completo de análise de dados com IA, que permite conversar sobre datasets CSV em linguagem natural usando Claude (Anthropic).
+Sistema completo de análise de dados com IA local, que permite conversar sobre datasets CSV em linguagem natural usando **Ollama** (grátis, roda no seu computador).
 
 ## Interfaces
 
@@ -14,7 +14,7 @@ Sistema completo de análise de dados com IA, que permite conversar sobre datase
 
 ## Tecnologias
 
-- **IA**: Claude API (Anthropic) — modelos `claude-opus-4-6` e `claude-sonnet-4-6`
+- **IA**: Ollama (local, gratuito) — modelo `qwen2.5:7b` (ou llama3.1:8b, mistral)
 - **Web**: Streamlit (interface), Flask (webhook)
 - **Visualização**: Plotly (2D e 3D interativos)
 - **Dados**: Pandas, NumPy
@@ -24,60 +24,63 @@ Sistema completo de análise de dados com IA, que permite conversar sobre datase
 
 ## Como Executar
 
-### 1. Instalar dependências (rode uma vez)
+---
 
+### ✅ Instalação — rode uma única vez
+
+**1. Baixar o Ollama**
+Acesse https://ollama.com, instale e depois rode:
 ```bash
-pip install anthropic streamlit flask twilio pandas numpy plotly kaleido requests scikit-learn matplotlib seaborn jupyter networkx --break-system-packages
+ollama pull qwen2.5:7b
 ```
 
-### 2. Configurar a chave da API
-
-Crie um arquivo `.env` na raiz do projeto ou exporte a variável no terminal:
-
+**2. Instalar dependências Python**
 ```bash
-export ANTHROPIC_API_KEY="sua-chave-aqui"
+pip3 install ollama streamlit flask twilio pandas numpy plotly kaleido requests scikit-learn matplotlib seaborn jupyter networkx python-dotenv --break-system-packages
 ```
 
 ---
 
-### App Web (Streamlit)
+### 🌐 App Web (Streamlit)
+
+Abra **1 terminal**:
 
 ```bash
 streamlit run frontend/app_streamlit.py
 ```
 
-Abre automaticamente em `http://localhost:8501`
+Acesse em: `http://localhost:8501`
 
 ---
 
-### Bot WhatsApp via Twilio
+### 📱 Bot WhatsApp (Twilio)
 
-Requer 2 terminais abertos ao mesmo tempo:
+Abra **2 terminais**:
 
 ```bash
-# Terminal 1 — inicia o servidor Flask na porta 5001:
+# Terminal 1 — servidor Flask:
 python3 backend/whatsapp_twilio.py
 
-# Terminal 2 — expõe o servidor para a internet:
+# Terminal 2 — túnel ngrok:
 ngrok http 5001
 ```
 
-Depois copie a URL gerada pelo ngrok (ex: `https://xxxx.ngrok-free.app`) e cole no **Twilio Console > Sandbox Settings > Webhook URL**, adicionando `/webhook` no final.
+Depois:
+1. Copie a URL gerada pelo ngrok (ex: `https://xxxx.ngrok-free.app`)
+2. Cole no **Twilio Console → Sandbox Settings → "When a message comes in"**:
+   ```
+   https://xxxx.ngrok-free.app/webhook
+   ```
+3. Clique em **Save**
+
+> ⚠️ A URL do ngrok muda toda vez que você reinicia. Sempre atualize no Twilio.
 
 ---
 
-### Bot WhatsApp via Meta API
+### 📓 Notebook Machine Learning
 
 ```bash
-python3 backend/whatsapp_bot.py
-```
-
----
-
-### Bot conversacional no terminal
-
-```bash
-python3 backend/csv_bot_claude.py
+jupyter notebook decision_tree_completo.ipynb
 ```
 
 ---
@@ -104,7 +107,7 @@ jupyter notebook decision_tree_completo.ipynb
 ```
 Usuário (Web/WhatsApp)
         ↓
-  Claude API (Agentic Loop)
+  Ollama — modelo local (Agentic Loop)
         ↓
   Tools: get_data_info | run_query | create_chart | detect_anomalies
         ↓

@@ -10,7 +10,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import networkx as nx
 import streamlit as st
-import anthropic
+import ollama
 
 warnings.filterwarnings("ignore")
 
@@ -345,10 +345,8 @@ for key, val in [
     if key not in st.session_state:
         st.session_state[key] = val
 
-# ── API ───────────────────────────────────────────────────────────────────────
-API_KEY = os.environ.get("ANTHROPIC_API_KEY")
-MODEL  = "claude-opus-4-6"
-client = anthropic.Anthropic(api_key=API_KEY)
+# ── Modelo Ollama (local, gratuito) ───────────────────────────────────────────
+MODEL = "qwen2.5:7b"   # troque por llama3.1:8b ou mistral se preferir
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1202,6 +1200,19 @@ TOOL_FNS = {
     "create_category_tree":       lambda i: create_category_tree(**i),
 }
 
+# Converte TOOLS do formato Anthropic para o formato Ollama/OpenAI
+TOOLS_OLLAMA = [
+    {
+        "type": "function",
+        "function": {
+            "name": t["name"],
+            "description": t["description"],
+            "parameters": t.get("input_schema", {"type": "object", "properties": {}}),
+        },
+    }
+    for t in TOOLS
+]
+
 
 def get_system() -> str:
     d = st.session_state.df
@@ -1262,56 +1273,67 @@ TOOL_LABELS = {
 
 
 def run_agent_streaming(user_msg: str, text_ph, status_ph) -> str:
-    messages = list(st.session_state.history)
+    # Monta histórico com system prompt na frente
+    messages = [{"role": "system", "content": get_system()}]
+    messages += [m for m in st.session_state.history if m["role"] != "system"]
     messages.append({"role": "user", "content": user_msg})
     final_text = ""
 
     for iteration in range(8):
-        streamed = ""
+        status_ph.markdown(
+            '<div class="thinking"><div class="thinking-dots">'
+            '<span></span><span></span><span></span></div>'
+            '&nbsp;⚙️ Pensando…</div>',
+            unsafe_allow_html=True,
+        )
 
-        with client.messages.stream(
-            model=MODEL, max_tokens=4096, system=get_system(),
-            tools=TOOLS, messages=messages,
-            thinking={"type": "adaptive"},
-        ) as stream:
-            for event in stream:
-                if event.type == "content_block_delta" and hasattr(event.delta, "text"):
-                    streamed += event.delta.text
-                    text_ph.markdown(streamed + "▌")
-            resp = stream.get_final_message()
+        try:
+            resp = ollama.chat(
+                model=MODEL,
+                messages=messages,
+                tools=TOOLS_OLLAMA,
+                stream=False,
+            )
+        except Exception as e:
+            status_ph.empty()
+            text_ph.markdown(f"❌ Erro ao conectar ao Ollama: `{e}`\n\n"
+                             "Verifique se o Ollama está rodando (`ollama serve`) "
+                             f"e o modelo baixado (`ollama pull {MODEL}`).")
+            return str(e)
 
         status_ph.empty()
-        messages.append({"role": "assistant", "content": resp.content})
+        msg = resp.message
 
-        for b in resp.content:
-            if hasattr(b, "text") and b.text:
-                final_text = b.text
+        # Adiciona resposta do assistente no histórico
+        assistant_entry: dict = {"role": "assistant", "content": msg.content or ""}
+        if msg.tool_calls:
+            assistant_entry["tool_calls"] = msg.tool_calls
+        messages.append(assistant_entry)
 
-        if resp.stop_reason == "end_turn":
+        # Sem chamadas de ferramentas → resposta final
+        if not msg.tool_calls:
+            final_text = msg.content or ""
             text_ph.markdown(final_text)
             break
 
-        if resp.stop_reason == "tool_use":
-            results = []
-            tool_names = []
-            for b in resp.content:
-                if b.type == "tool_use":
-                    tool_names.append(TOOL_LABELS.get(b.name, f"⚙️ {b.name}…"))
-                    inp = b.input if isinstance(b.input, dict) else {}
-                    fn  = TOOL_FNS.get(b.name)
-                    res = fn(inp) if fn else f"Tool '{b.name}' não encontrada"
-                    results.append({"type": "tool_result", "tool_use_id": b.id, "content": str(res)[:8000]})
-
-            label = tool_names[0] if tool_names else "⚙️ Processando…"
+        # Executa cada ferramenta chamada
+        for tc in msg.tool_calls:
+            name = tc.function.name
+            args = tc.function.arguments if isinstance(tc.function.arguments, dict) else {}
+            label = TOOL_LABELS.get(name, f"⚙️ {name}…")
             status_ph.markdown(
-                f'<div class="thinking"><div class="thinking-dots"><span></span>'
-                f'<span></span><span></span></div>&nbsp;{label}</div>',
+                f'<div class="thinking"><div class="thinking-dots">'
+                f'<span></span><span></span><span></span></div>'
+                f'&nbsp;{label}</div>',
                 unsafe_allow_html=True,
             )
             text_ph.empty()
-            messages.append({"role": "user", "content": results})
+            fn  = TOOL_FNS.get(name)
+            res = fn(args) if fn else f"Ferramenta '{name}' não encontrada."
+            messages.append({"role": "tool", "content": str(res)[:8000]})
 
-    st.session_state.history = messages
+    # Salva histórico sem o system prompt (para não duplicar na próxima chamada)
+    st.session_state.history = [m for m in messages if m["role"] != "system"]
     return final_text
 
 

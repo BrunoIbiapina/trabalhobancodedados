@@ -11,22 +11,22 @@ import plotly.graph_objects as go
 from flask import Flask, request
 from twilio.rest import Client as TwilioClient
 from twilio.twiml.messaging_response import MessagingResponse
-import anthropic
+import ollama
 import requests as req
+from dotenv import load_dotenv
+load_dotenv()
 
 # ── Configuração ─────────────────────────────────────────────────────────────
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN  = os.environ.get("TWILIO_AUTH_TOKEN")
 TWILIO_WHATSAPP    = os.environ.get("TWILIO_WHATSAPP", "whatsapp:+14155238886")
 
-ANTHROPIC_KEY = os.environ.get("ANTHROPIC_KEY")
-
+MODEL    = "qwen2.5:7b"   # modelo local Ollama
 DATA_DIR = os.path.expanduser("~/Downloads/TrabalhoBD")
 NGROK_URL = None  # Preenchido automaticamente
 
 # ── Clientes ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
-claude = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
 twilio_client = TwilioClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 # Estado por número
@@ -254,11 +254,11 @@ def detect_anomalies(phone, column, method="iqr"):
 
 
 # ── Tools definition ─────────────────────────────────────────────────────────
-TOOLS = [
-    {"name":"get_data_info","description":"Obtém shape, colunas, tipos, estatísticas e amostra do dataset carregado.","input_schema":{"type":"object","properties":{"sample_rows":{"type":"integer","default":5}}}},
-    {"name":"run_query","description":"Executa expressão pandas no DataFrame 'df'. Ex: df.groupby('col')['val'].mean()","input_schema":{"type":"object","properties":{"code":{"type":"string"}},"required":["code"]}},
-    {"name":"create_chart","description":"Cria gráfico e envia como imagem. Tipos: histogram, scatter, scatter3d, surface3d, bar, box, heatmap, pie, line","input_schema":{"type":"object","properties":{"chart_type":{"type":"string"},"x_col":{"type":"string"},"y_col":{"type":"string"},"z_col":{"type":"string"},"color_col":{"type":"string"},"title":{"type":"string"},"aggregation":{"type":"string","default":"mean"}},"required":["chart_type"]}},
-    {"name":"detect_anomalies","description":"Detecta anomalias em coluna numérica e gera gráfico com outliers destacados.","input_schema":{"type":"object","properties":{"column":{"type":"string"},"method":{"type":"string","enum":["iqr","zscore"],"default":"iqr"}},"required":["column"]}},
+TOOLS_OLLAMA = [
+    {"type":"function","function":{"name":"get_data_info","description":"Obtém shape, colunas, tipos, estatísticas e amostra do dataset carregado.","parameters":{"type":"object","properties":{"sample_rows":{"type":"integer","default":5}}}}},
+    {"type":"function","function":{"name":"run_query","description":"Executa expressão pandas no DataFrame 'df'. Ex: df.groupby('col')['val'].mean()","parameters":{"type":"object","properties":{"code":{"type":"string"}},"required":["code"]}}},
+    {"type":"function","function":{"name":"create_chart","description":"Cria gráfico e envia como imagem. Tipos: histogram, scatter, scatter3d, surface3d, bar, box, heatmap, pie, line","parameters":{"type":"object","properties":{"chart_type":{"type":"string"},"x_col":{"type":"string"},"y_col":{"type":"string"},"z_col":{"type":"string"},"color_col":{"type":"string"},"title":{"type":"string"},"aggregation":{"type":"string","default":"mean"}},"required":["chart_type"]}}},
+    {"type":"function","function":{"name":"detect_anomalies","description":"Detecta anomalias em coluna numérica e gera gráfico com outliers destacados.","parameters":{"type":"object","properties":{"column":{"type":"string"},"method":{"type":"string","enum":["iqr","zscore"],"default":"iqr"}},"required":["column"]}}},
 ]
 
 SYSTEM_PROMPT = """Você é o DataChat, um assistente de análise de dados no WhatsApp.
@@ -285,85 +285,85 @@ Gráficos são enviados como imagem PNG no WhatsApp."""
 
 
 def run_agent(phone, user_msg):
-    """Executa o loop agentic com tool use."""
+    """Executa o loop agentic com tool use via Ollama."""
     if phone not in conversations:
         conversations[phone] = []
 
     history = conversations[phone]
-    history.append({"role": "user", "content": user_msg})
 
+    # Limita histórico a 20 mensagens
     if len(history) > 20:
         history = history[-20:]
         conversations[phone] = history
 
-    images = []  # Lista de caminhos de imagens pra enviar
+    # Monta mensagens com system prompt
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages += [m for m in history if m["role"] != "system"]
+    messages.append({"role": "user", "content": user_msg})
+
+    images = []
 
     try:
         for _ in range(5):  # Max 5 iterações
-            response = claude.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=1024,
-                system=SYSTEM_PROMPT,
-                tools=TOOLS,
-                messages=history,
+            resp = ollama.chat(
+                model=MODEL,
+                messages=messages,
+                tools=TOOLS_OLLAMA,
+                stream=False,
             )
 
-            # Processa a resposta
-            text_parts = []
-            tool_calls = []
+            msg = resp.message
 
-            for block in response.content:
-                if block.type == "text":
-                    text_parts.append(block.text)
-                elif block.type == "tool_use":
-                    tool_calls.append(block)
+            # Adiciona resposta ao histórico
+            assistant_entry = {"role": "assistant", "content": msg.content or ""}
+            if msg.tool_calls:
+                assistant_entry["tool_calls"] = msg.tool_calls
+            messages.append(assistant_entry)
 
-            # Se não tem tool calls, retorna o texto
-            if not tool_calls:
-                final_text = "\n".join(text_parts)
-                history.append({"role": "assistant", "content": response.content})
+            # Sem tool calls → resposta final
+            if not msg.tool_calls:
+                final_text = msg.content or ""
+                # Salva histórico sem system
+                conversations[phone] = [m for m in messages if m["role"] != "system"]
                 return final_text, images
 
-            # Executa tools
-            history.append({"role": "assistant", "content": response.content})
-            tool_results = []
-
-            for tc in tool_calls:
-                name = tc.name
-                args = tc.input
+            # Executa cada tool
+            for tc in msg.tool_calls:
+                name = tc.function.name
+                args = tc.function.arguments if isinstance(tc.function.arguments, dict) else {}
                 print(f"[TOOL] {name}({json.dumps(args, ensure_ascii=False)[:100]})")
 
                 if name == "get_data_info":
                     result = get_data_info(phone, args.get("sample_rows", 5))
-                    tool_results.append({"type":"tool_result","tool_use_id":tc.id,"content":result})
 
                 elif name == "run_query":
-                    result = run_query(phone, args["code"])
-                    tool_results.append({"type":"tool_result","tool_use_id":tc.id,"content":result})
+                    result = run_query(phone, args.get("code", ""))
 
                 elif name == "create_chart":
                     img_path, result = create_chart(
-                        phone, args["chart_type"],
+                        phone, args.get("chart_type", "bar"),
                         args.get("x_col"), args.get("y_col"), args.get("z_col"),
-                        args.get("color_col"), args.get("title"), args.get("aggregation","mean")
+                        args.get("color_col"), args.get("title"), args.get("aggregation", "mean")
                     )
                     if img_path:
                         images.append(img_path)
-                    tool_results.append({"type":"tool_result","tool_use_id":tc.id,"content":result})
 
                 elif name == "detect_anomalies":
-                    img_path, result = detect_anomalies(phone, args["column"], args.get("method","iqr"))
+                    img_path, result = detect_anomalies(phone, args.get("column",""), args.get("method","iqr"))
                     if img_path:
                         images.append(img_path)
-                    tool_results.append({"type":"tool_result","tool_use_id":tc.id,"content":result})
 
-            history.append({"role": "user", "content": tool_results})
+                else:
+                    result = f"Ferramenta '{name}' não encontrada."
 
+                messages.append({"role": "tool", "content": str(result)[:4000]})
+
+        conversations[phone] = [m for m in messages if m["role"] != "system"]
         return "Desculpa, a análise ficou complexa demais. Tenta reformular?", images
 
     except Exception as e:
-        print(f"[ERRO] Claude: {e}")
-        return "Tive um problema técnico. Tenta de novo!", images
+        print(f"[ERRO] Ollama: {e}")
+        return f"Tive um problema técnico: {e}", images
 
 
 # ── Typing indicator ─────────────────────────────────────────────────────────
